@@ -1,0 +1,46 @@
+name: FlowOrchestrator_Example_Flow
+goal: generate interview problem and conduct coding interview with user
+steps:
+  - goal: Generate the coding problem prompt that outputs the maximum subarray in a list.
+    plugins:
+      - GenerateProblemPlugin
+    provides:
+      - problem_statement
+  - goal: Ask user what programming language they will use to implement the solution. Generate the function signature they should implement the solution in.
+    plugins:
+      - CollectPreferredLanguageToolPlugin
+      - GenerateFunctionSignaturePlugin
+    requires:
+      - problem_statement
+    provides:
+      - programming_language
+      - function_signature
+  - goal: Ask user to code the problem solution. Get fully implemented solution from user without validating.
+    plugins:
+      - PromptSolutionPlugin
+    requires:
+      - problem_statement
+      - programming_language
+      - function_signature
+    provides:
+      - _solution_code_implementation
+  - goal: Prompt user to analyze time and space complexity of their final solution. 
+    plugins:
+      - PromptTimeAndSpaceComplexityAnalysisPlugin
+    requires:
+      - problem_statement
+      - _solution_code_implementation
+    provides:
+      - time_complexity
+      - space_complexity
+  - goal: Give user the decision of the interview based on user's interview performance.
+    plugins:
+      - ConcludeInterviewPlugin
+    requires:
+      - problem_statement
+      - _solution_code_implementation
+      - time_complexity
+      - space_complexity
+    provides:
+      - interview_analysis
+      - decision
