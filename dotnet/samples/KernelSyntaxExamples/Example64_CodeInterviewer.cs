@@ -175,9 +175,9 @@ public static class Example64_FlowOrchestrator
                 UseExponentialBackoff = true,
                 MinRetryDelay = TimeSpan.FromSeconds(3),
             })
-            //.WithLoggerFactory(loggerFactory);
-            .WithLoggerFactory(
-                LoggerFactory.Create(option => option.AddConsole()));
+            .WithLoggerFactory(loggerFactory);
+            //.WithLoggerFactory(
+            //    LoggerFactory.Create(option => option.AddConsole()));
     }
 
     public sealed class GenerateProblemPlugin
@@ -632,9 +632,9 @@ time complexity {TimeComplexity}, and space complexity {SpaceComplexity}.
 2. Score user's performance and give user 3 scores out of 10 and 1 score out of 5 for test case walk-through:
     - code reliabiity,
     - code readability,
-    - communication score,
+    - time and space optimality,
     - test case walk-through or a slack thereof.
-3. Tally up total scores out of 35. Tell user they passed the interview if above 25.
+3. Tally up total scores out of 35. Tell user they passed the interview if above 27.
 Otherwise, tell them they failed and can retake after a month.
 4. Summarize user's interview performance and give user justification for each scoring criteria..
 5. End this task and the interview.
@@ -647,7 +647,7 @@ Assistant:
     Your code readability is good, as you have used clear variable names and have written concise code. However, you could improve the readability by adding comments to explain your thought process and the logic behind your code.
     Your communication score is also good, as you were able to explain your thought process and approach to the problem clearly. However, you could improve by asking clarifying questions and engaging in a dialogue with the interviewer.
     Testing is an essential part of software development. You could've done better with a walk-through of your implementation with some test cases
-    Overall, I would give you a score of 8/10 for code reliability, 9/10 for code readability, 7/10 for communication score, 1/5 for not running enough test cases.
+    Overall, I would give you a score of 8/10 for code reliability, 9/10 for code readability, 10/10 for time and space optimality, 1/5 for not running enough test cases.
     Congratulations! You passed the interview. I will be in touch to set up your next round of interview. Have a great day!
 [End Example]
 ";
