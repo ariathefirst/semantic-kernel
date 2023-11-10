@@ -87,7 +87,7 @@ public static class Example64_FlowOrchestrator
         using var loggerFactory = LoggerFactory.Create(loggerBuilder =>
             loggerBuilder
                 .AddConsole()
-                .AddFilter(null, LogLevel.Warning));
+                .AddFilter(null, LogLevel.Error));
 
         Dictionary<object, string?> plugins = new()
         {
@@ -161,9 +161,9 @@ public static class Example64_FlowOrchestrator
                 UseExponentialBackoff = true,
                 MinRetryDelay = TimeSpan.FromSeconds(3),
             })
-            //.WithLoggerFactory(loggerFactory);
-            .WithLoggerFactory(
-                LoggerFactory.Create(option => option.AddConsole()));
+            .WithLoggerFactory(loggerFactory);
+            //.WithLoggerFactory(
+            //    LoggerFactory.Create(option => option.AddConsole()));
     }
 
     public sealed class GenerateProblemPlugin
