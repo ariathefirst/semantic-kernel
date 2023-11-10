@@ -18,14 +18,16 @@ public sealed class ConcludeInterviewPlugin
 
     private const string Solution = "_solution_code_implementation";
 
+    private const string Problem = "problem_statement";
+
     private const string TimeComplexity = "time_complexity";
 
     private const string SpaceComplexity = "space_complexity";
 
-    private const string SystemPrompt =
+    private string SystemPrompt =
 @$"Steps to follow:
 1. Analyze user's interview in the previous conversation
-based on user's coding interview solution: {Solution},
+based on user's coding interview solution: {Solution} to the {Problem},
 time complexity {TimeComplexity}, and space complexity {SpaceComplexity}.
 2. Score user's performance and give user 3 scores out of 10 and 1 score out of 5 for test case walk-through:
     - code reliabiity,
@@ -81,8 +83,10 @@ Assistant:
         //Console.WriteLine("<======= Creating GiveFeedback chat =======>\n");
 
         context.Variables.TryGetValue("_solution_code_implementation", out string solution);
-
-        context.Variables["_solution_code_implementation"] = solution;
+        SystemPrompt = SystemPrompt.Replace(Solution, solution);
+        SystemPrompt = SystemPrompt.Replace(Problem, problem);
+        SystemPrompt = SystemPrompt.Replace(TimeComplexity, time_complexity);
+        SystemPrompt = SystemPrompt.Replace(SpaceComplexity, space_complexity);
 
         //Console.WriteLine($"5555555555 {context.Variables["_solution_code_implementation"]} 555555555");
         var chat = this._chat.CreateNewChat(SystemPrompt);
@@ -112,8 +116,7 @@ Assistant:
         if (feedbackProvided && interviewDecisionProvided)
         {
             context.PromptInput();
-            return "Assistant: " + context.Variables["feedback"]
-                 + "\nDecision is: " + context.Variables["interview_decision"];
+            return "Assistant: " + feedback + " and the decision is " + interview_decision;
         }
 
         return "Assistant: " + await this._chat.GenerateMessageAsync(chat, this._chatRequestSettings).ConfigureAwait(false);

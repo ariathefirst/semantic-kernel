@@ -23,7 +23,7 @@ public sealed class PromptSolutionPlugin
     private const string Delimiter = "```";
     private const string Goal = "Ask user for the code implementation to the problem.";
 
-    private const string SystemPrompt =
+    private string SystemPrompt =
         $@"[Instruction]
 You are an online coding interviewer.
 You have provided the user with a {Problem} generated from the previous step to solve.
@@ -121,6 +121,9 @@ IMPORTANT: You shouldn't test the solution.
         SKContext context)
     {
         //Console.WriteLine("<======= Creating PromptSolution chat =======>\n");
+        SystemPrompt = SystemPrompt.Replace(ProgrammingLanguage, programming_language);
+        SystemPrompt = SystemPrompt.Replace(FunctionSignature, function_signature);
+
         var chat = this._chat.CreateNewChat(SystemPrompt);
         chat.AddUserMessage(Goal);
 

@@ -22,7 +22,7 @@ public sealed class PromptTimeAndSpaceComplexityAnalysisPlugin
     private const string Delimiter = "```";
     private const string Goal = "Ask user to analyze the time and space complexity of their final solution's code implementation.";
 
-    private const string SystemPrompt =
+    private string SystemPrompt =
         @$"[Instruction]
 The user has provided the final {Solution} to the {Problem}.
 Your only task is to get the time and space complexity analysis from the user.
@@ -81,6 +81,10 @@ IMPORTANT: You will reply with the JSON object ONLY. This object will be wrapped
         SKContext context)
     {
         //Console.WriteLine("<======= Creating PromptComplexity chat =======>\n");
+        context.Variables.TryGetValue("_solution_code_implementation", out string solution);
+
+        SystemPrompt = SystemPrompt.Replace(Solution, solution);
+        SystemPrompt = SystemPrompt.Replace(Problem, problem_statement);
         var chat = this._chat.CreateNewChat(SystemPrompt);
         chat.AddUserMessage(Goal);
 
@@ -89,9 +93,6 @@ IMPORTANT: You will reply with the JSON object ONLY. This object will be wrapped
         {
             chat.Messages.AddRange(chatHistory);
         }
-
-        context.Variables.TryGetValue("_solution_code_implementation", out string solution);
-        context.Variables["_solution_code_implementation"] = solution;
 
         var response = await this._chat.GenerateMessageAsync(chat, this._chatRequestSettings).ConfigureAwait(false);
 

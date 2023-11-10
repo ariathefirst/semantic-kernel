@@ -62,7 +62,8 @@ Provide the function signature to the user.";
         SKContext context)
     {
         //Console.WriteLine("<======= Creating GenerateFunctionSignature chat =======>\n");
-        var chat = this._chat.CreateNewChat(SystemPrompt);
+        var systemPrompt = SystemPrompt.Replace(ProgrammingLanguage, programming_language);
+        var chat = this._chat.CreateNewChat(systemPrompt);
         chat.AddUserMessage(Goal);
 
         ChatHistory? chatHistory = context.GetChatHistory();

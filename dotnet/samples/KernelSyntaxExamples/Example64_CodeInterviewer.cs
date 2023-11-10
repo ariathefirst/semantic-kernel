@@ -87,7 +87,7 @@ public static class Example64_FlowOrchestrator
         using var loggerFactory = LoggerFactory.Create(loggerBuilder =>
             loggerBuilder
                 .AddConsole()
-                .AddFilter(null, LogLevel.Error));
+                .AddFilter(null, LogLevel.Warning));
 
         Dictionary<object, string?> plugins = new()
         {
@@ -122,7 +122,6 @@ public static class Example64_FlowOrchestrator
             "Yes.",
             "I think the time complexity is O(n) since I iterate through the array exactly once and the space complexity is O(1) since there's no extra space used.",
             "Yes",
-            "So how did I do on the interview?",
         };
 
         foreach (var t in userInputs)
@@ -162,9 +161,9 @@ public static class Example64_FlowOrchestrator
                 UseExponentialBackoff = true,
                 MinRetryDelay = TimeSpan.FromSeconds(3),
             })
-            .WithLoggerFactory(loggerFactory);
-            //.WithLoggerFactory(
-            //    LoggerFactory.Create(option => option.AddConsole()));
+            //.WithLoggerFactory(loggerFactory);
+            .WithLoggerFactory(
+                LoggerFactory.Create(option => option.AddConsole()));
     }
 
     public sealed class GenerateProblemPlugin
@@ -198,7 +197,7 @@ public static class Example64_FlowOrchestrator
             [SKName("problem_statement")][Description("The coding problem prompt")] string problem,
             SKContext context)
         {
-            //Console.WriteLine("<======= Creating GenerateProblem chat =======>\n");
+            Console.WriteLine("<======= Creating GenerateProblem chat =======>\n");
             var chat = this._chat.CreateNewChat(SystemPrompt);
             chat.AddUserMessage(Goal);
 
@@ -208,10 +207,11 @@ public static class Example64_FlowOrchestrator
                 chat.Messages.AddRange(chatHistory);
             }
 
+            Console.Write("000000000000");
+
             if (!string.IsNullOrEmpty(problem))
             {
                 context.Variables["problem_statement"] = problem;
-
                 Console.WriteLine("Assistant: Hello! Thanks for joining the coding interview. " +
                    "Here's the problem for you to solve: \n" + problem);
 
@@ -219,9 +219,7 @@ public static class Example64_FlowOrchestrator
                    "Here's the problem for you to solve: \n" + problem;
             }
 
-            return "Assistant: Hello! Thanks for joining the coding interview. " +
-                   "Here's the problem for you to solve: \n" +
-                   await this._chat.GenerateMessageAsync(chat, this._chatRequestSettings).ConfigureAwait(false);
+            return "Assistant: " + await this._chat.GenerateMessageAsync(chat, this._chatRequestSettings).ConfigureAwait(false);
         }
     }
 
@@ -262,7 +260,7 @@ public static class Example64_FlowOrchestrator
             [SKName("programming_language")][Description("The programming language the user intends to use")] string programming_language,
             SKContext context)
         {
-            //Console.WriteLine("<======= Creating CollectPreferredLanguageTool chat =======>\n");
+            Console.WriteLine("<======= Creating CollectPreferredLanguageTool chat =======>\n");
             var chat = this._chat.CreateNewChat(SystemPrompt);
             chat.AddUserMessage(Goal);
 
@@ -336,7 +334,8 @@ Provide the function signature to the user.";
             SKContext context)
         {
             //Console.WriteLine("<======= Creating GenerateFunctionSignature chat =======>\n");
-            var chat = this._chat.CreateNewChat(SystemPrompt);
+            var systemPrompt = SystemPrompt.Replace(ProgrammingLanguage, programming_language);
+            var chat = this._chat.CreateNewChat(systemPrompt);
             chat.AddUserMessage(Goal);
 
             ChatHistory? chatHistory = context.GetChatHistory();
@@ -355,6 +354,7 @@ Provide the function signature to the user.";
             return "Assistant: Here's a function signature you could use to implement your final solution: \n" + await this._chat.GenerateMessageAsync(chat, this._chatRequestSettings).ConfigureAwait(false);
         }
     }
+
     public sealed class PromptSolutionPlugin
     {
         private const string Problem = "problem_statement";
@@ -363,7 +363,7 @@ Provide the function signature to the user.";
         private const string Delimiter = "```";
         private const string Goal = "Ask user for the code implementation to the problem.";
 
-        private const string SystemPrompt =
+        private string SystemPrompt =
             $@"[Instruction]
 You are an online coding interviewer.
 You have provided the user with a {Problem} generated from the previous step to solve.
@@ -461,6 +461,9 @@ IMPORTANT: You shouldn't test the solution.
             SKContext context)
         {
             //Console.WriteLine("<======= Creating PromptSolution chat =======>\n");
+            SystemPrompt = SystemPrompt.Replace(ProgrammingLanguage, programming_language);
+            SystemPrompt = SystemPrompt.Replace(FunctionSignature, function_signature);
+
             var chat = this._chat.CreateNewChat(SystemPrompt);
             chat.AddUserMessage(Goal);
 
@@ -496,6 +499,7 @@ IMPORTANT: You shouldn't test the solution.
 
         }
     }
+
     public sealed class PromptTimeAndSpaceComplexityAnalysisPlugin
     {
         private const string Problem = "problem_statement";
@@ -503,7 +507,7 @@ IMPORTANT: You shouldn't test the solution.
         private const string Delimiter = "```";
         private const string Goal = "Ask user to analyze the time and space complexity of their final solution's code implementation.";
 
-        private const string SystemPrompt =
+        private string SystemPrompt =
             @$"[Instruction]
 The user has provided the final {Solution} to the {Problem}.
 Your only task is to get the time and space complexity analysis from the user.
@@ -562,6 +566,10 @@ IMPORTANT: You will reply with the JSON object ONLY. This object will be wrapped
             SKContext context)
         {
             //Console.WriteLine("<======= Creating PromptComplexity chat =======>\n");
+            context.Variables.TryGetValue("_solution_code_implementation", out string solution);
+
+            SystemPrompt = SystemPrompt.Replace(Solution, solution);
+            SystemPrompt = SystemPrompt.Replace(Problem, problem_statement);
             var chat = this._chat.CreateNewChat(SystemPrompt);
             chat.AddUserMessage(Goal);
 
@@ -570,9 +578,6 @@ IMPORTANT: You will reply with the JSON object ONLY. This object will be wrapped
             {
                 chat.Messages.AddRange(chatHistory);
             }
-
-            context.Variables.TryGetValue("_solution_code_implementation", out string solution);
-            context.Variables["_solution_code_implementation"] = solution;
 
             var response = await this._chat.GenerateMessageAsync(chat, this._chatRequestSettings).ConfigureAwait(false);
 
@@ -607,14 +612,16 @@ IMPORTANT: You will reply with the JSON object ONLY. This object will be wrapped
 
         private const string Solution = "_solution_code_implementation";
 
+        private const string Problem = "problem_statement";
+
         private const string TimeComplexity = "time_complexity";
 
         private const string SpaceComplexity = "space_complexity";
 
-        private const string SystemPrompt =
+        private string SystemPrompt =
     @$"Steps to follow:
 1. Analyze user's interview in the previous conversation
-based on user's coding interview solution: {Solution},
+based on user's coding interview solution: {Solution} to the {Problem},
 time complexity {TimeComplexity}, and space complexity {SpaceComplexity}.
 2. Score user's performance and give user 3 scores out of 10 and 1 score out of 5 for test case walk-through:
     - code reliabiity,
@@ -670,8 +677,10 @@ Assistant:
             //Console.WriteLine("<======= Creating GiveFeedback chat =======>\n");
 
             context.Variables.TryGetValue("_solution_code_implementation", out string solution);
-
-            context.Variables["_solution_code_implementation"] = solution;
+            SystemPrompt = SystemPrompt.Replace(Solution, solution);
+            SystemPrompt = SystemPrompt.Replace(Problem, problem);
+            SystemPrompt = SystemPrompt.Replace(TimeComplexity, time_complexity);
+            SystemPrompt = SystemPrompt.Replace(SpaceComplexity, space_complexity);
 
             //Console.WriteLine($"5555555555 {context.Variables["_solution_code_implementation"]} 555555555");
             var chat = this._chat.CreateNewChat(SystemPrompt);
@@ -701,8 +710,7 @@ Assistant:
             if (feedbackProvided && interviewDecisionProvided)
             {
                 context.PromptInput();
-                return "Assistant: " + context.Variables["feedback"]
-                     + "\nDecision is: " + context.Variables["interview_decision"];
+                return "Assistant: " + feedback + " and the decision is " + interview_decision;
             }
 
             return "Assistant: " + await this._chat.GenerateMessageAsync(chat, this._chatRequestSettings).ConfigureAwait(false);

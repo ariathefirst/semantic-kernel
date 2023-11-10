@@ -44,7 +44,7 @@ public sealed class GenerateProblemPlugin
         [SKName("problem_statement")][Description("The coding problem prompt")] string problem,
         SKContext context)
     {
-        //Console.WriteLine("<======= Creating GenerateProblem chat =======>\n");
+        Console.WriteLine("<======= Creating GenerateProblem chat =======>\n");
         var chat = this._chat.CreateNewChat(SystemPrompt);
         chat.AddUserMessage(Goal);
 
@@ -54,10 +54,11 @@ public sealed class GenerateProblemPlugin
             chat.Messages.AddRange(chatHistory);
         }
 
+        Console.Write("000000000000");
+
         if (!string.IsNullOrEmpty(problem))
         {
             context.Variables["problem_statement"] = problem;
-
             Console.WriteLine("Assistant: Hello! Thanks for joining the coding interview. " +
                "Here's the problem for you to solve: \n" + problem);
 
@@ -65,9 +66,6 @@ public sealed class GenerateProblemPlugin
                "Here's the problem for you to solve: \n" + problem;
         }
 
-        return "Assistant: Hello! Thanks for joining the coding interview. " +
-               "Here's the problem for you to solve: \n" +
-               await this._chat.GenerateMessageAsync(chat, this._chatRequestSettings).ConfigureAwait(false);
+        return "Assistant: " + await this._chat.GenerateMessageAsync(chat, this._chatRequestSettings).ConfigureAwait(false);
     }
 }
-
